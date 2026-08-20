@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peyk</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --indigo: #3B4CE0;
+    --indigo-deep: #1E2570;
+    --coral: #FF6F59;
+    --bg: #FAFAFB;
+    --surface: #FFFFFF;
+    --surface-alt: #F1F1F5;
+    --border: #E7E7EE;
+    --text: #15162B;
+    --text-secondary: #6B6D85;
+    --text-faint: #A0A2B8;
+    --bubble-me: #3B4CE0;
+    --bubble-them: #FFFFFF;
+    --online: #3ED598;
+    --danger: #E24C4C;
+  }
+  [data-theme="dark"] {
+    --bg: #0E0F1A;
+    --surface: #171827;
+    --surface-alt: #1E2032;
+    --border: #2A2C42;
+    --text: #EDEDF5;
+    --text-secondary: #9C9EB5;
+    --text-faint: #62637A;
+    --bubble-me: #4A5AF0;
+    --bubble-them: #1E2032;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--text); }
+
+  .app-shell { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ---------- Auth screen ---------- */
+  .auth-screen { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg); overflow-y: auto; padding: 30px 0; }
+  .auth-card { width: 100%; max-width: 380px; text-align: center; padding: 20px; }
+  .auth-logo {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; color: #fff; font-size: 30px; font-weight: 800;
+  }
+  .auth-title { font-size: 23px; font-weight: 700; margin-bottom: 8px; }
+  .auth-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 26px; line-height: 1.5; }
+  .field-row { display: flex; gap: 10px; margin-bottom: 12px; text-align: left; }
+  .field {
+    flex: 1; background: var(--surface-alt); border: 1px solid transparent; border-radius: 12px;
+    padding: 14px 16px; font-size: 15px; color: var(--text); width: 100%;
+    font-family: 'Vazirmatn', sans-serif; outline: none; transition: border-color .15s; margin-bottom: 12px;
+  }
+  .field:focus { border-color: var(--indigo); }
+  .field.err { border-color: var(--danger); }
+  .country-code {
+    background: var(--surface-alt); border-radius: 12px; padding: 14px;
+    font-weight: 600; font-size: 15px; flex-shrink: 0; cursor: default; user-select: none;
+  }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; text-align: left; }
+  .btn-primary {
+    width: 100%; background: var(--indigo); color: #fff; border: none;
+    font-family: 'Vazirmatn', sans-serif; font-weight: 700; font-size: 15px;
+    padding: 14px; border-radius: 24px; cursor: pointer; margin-top: 8px; transition: opacity .15s;
+  }
+  .btn-primary:hover { opacity: .9; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-text {
+    background: none; border: none; color: var(--indigo); font-family: 'Vazirmatn', sans-serif;
+    font-size: 13px; cursor: pointer; padding: 8px;
+  }
+  .auth-foot { font-size: 12px; color: var(--text-faint); margin-top: 20px; line-height: 1.6; }
+  .auth-error {
+    color: var(--danger); font-size: 13px; margin: 8px 0; min-height: 16px; text-align: left;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .otp-hint {
+    background: var(--surface-alt); border-radius: 10px; padding: 10px 14px;
+    font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; text-align: left;
+  }
+  .server-config {
+    margin-top: 22px; font-size: 11.5px; color: var(--text-faint);
+    display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+  }
+  .server-config input {
+    border: none; background: var(--surface-alt); color: var(--text-secondary);
+    font-family: monospace; font-size: 11.5px; width: 190px; padding: 4px 8px; border-radius: 6px;
+  }
+  .server-badge { display: flex; align-items: center; gap: 5px; }
+  .server-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
+  .server-dot.ok { background: var(--online); }
+  .server-dot.down { background: var(--danger); }
+  .auth-mode-switch {
+    display: flex; background: var(--surface-alt); border-radius: 12px; padding: 4px; margin-bottom: 22px;
+  }
+  .auth-mode-btn {
+    flex: 1; padding: 9px; border: none; background: transparent; border-radius: 9px;
+    font-family: 'Vazirmatn', sans-serif; font-weight: 600; font-size: 13.5px; color: var(--text-secondary); cursor: pointer;
+  }
+  .auth-mode-btn.active { background: var(--surface); color: var(--indigo); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar { width: 380px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: relative; }
+  .sidebar-header { padding: 18px 18px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 22px; font-weight: 800; color: var(--indigo); letter-spacing: -0.3px; }
+  .header-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 10px; border: none; background: transparent;
+    color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    position: relative; transition: background .15s;
+  }
+  .icon-btn:hover { background: var(--surface-alt); }
+  .icon-btn svg { width: 20px; height: 20px; }
+  .icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .badge-dot {
+    position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--coral); color: #fff; font-size: 9.5px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .me-strip { margin: 0 12px 10px; padding: 10px 12px; background: var(--surface-alt); border-radius: 12px; display: flex; align-items: center; gap: 10px; }
+  .me-strip .avatar { width: 34px; height: 34px; font-size: 13px; }
+  .me-strip-info { flex: 1; min-width: 0; }
+  .me-strip-name { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+  .me-strip-phone { font-size: 11px; color: var(--text-secondary); }
+  .switch-account-btn { font-size: 11px; color: var(--indigo); background: none; border: none; cursor: pointer; font-family: 'Vazirmatn', sans-serif; font-weight: 600; }
+  .invisible-chip { font-size: 9px; background: var(--text-faint); color: #fff; padding: 1px 6px; border-radius: 8px; font-weight: 700; }
+
+  .tabs { display: flex; gap: 6px; padding: 0 18px 12px; }
+  .tab { padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 600; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; }
+  .tab.active { background: rgba(59,76,224,0.12); color: var(--indigo); }
+
+  .list-area { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
+  .empty-note { padding: 30px 20px; text-align: center; color: var(--text-faint); font-size: 13.5px; line-height: 1.6; }
+
+  .contact-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; cursor: pointer; transition: background .15s; }
+  .contact-row:hover { background: var(--surface-alt); }
+  .contact-row.selected { background: rgba(59,76,224,0.10); }
+  .contact-row.has-unread .contact-name { font-weight: 800; }
+  .unread-count { background: var(--coral); color: #fff; font-size: 11px; font-weight: 700; min-width: 19px; height: 19px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; flex-shrink: 0; }
+  .avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 16px; flex-shrink: 0; position: relative; overflow: hidden; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar.online::after { content: ''; position: absolute; bottom: 0px; right: 0px; width: 12px; height: 12px; border-radius: 50%; background: var(--online); border: 2.5px solid var(--surface); }
+  .contact-info { flex: 1; min-width: 0; }
+  .contact-name { font-size: 14.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .contact-sub { font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .contact-sub.typing { color: var(--indigo); font-weight: 600; }
+  .new-msg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); flex-shrink: 0; }
+
+  .request-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .action-btn { width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .action-btn.accept { background: var(--online); color: #fff; }
+  .action-btn.decline { background: var(--surface-alt); color: var(--text-secondary); }
+  .action-btn svg { width: 15px; height: 15px; }
+
+  .fab { position: absolute; bottom: 22px; right: 22px; z-index: 10; width: 52px; height: 52px; border-radius: 16px; background: var(--coral); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(255,111,89,0.35); cursor: pointer; border: none; transition: transform .15s; }
+  .fab:hover { transform: scale(1.06); }
+  .fab svg { width: 22px; height: 22px; }
+
+  /* ---------- Main panel ---------- */
+  .main-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+  .panel-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-faint); gap: 12px; }
+  .panel-placeholder svg { width: 60px; height: 60px; opacity: .5; }
+
+  .chat-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+  .chat-header-name { font-size: 15.5px; font-weight: 700; }
+  .chat-header-status { font-size: 12px; color: var(--text-faint); }
+  .chat-header-status.online { color: var(--online); }
+  .chat-header-status.typing { color: var(--indigo); font-weight: 600; }
+  .chat-header-actions { margin-left: auto; display: flex; gap: 6px; }
+  .conn-pill { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 10px; background: var(--surface-alt); color: var(--text-faint); display: flex; align-items: center; gap: 5px; }
+  .conn-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
+  .conn-pill.live { color: var(--online); }
+  .conn-pill.live .dot { background: var(--online); }
+  .conn-pill.down { color: var(--danger); }
+  .conn-pill.down .dot { background: var(--danger); animation: rec-blink 1s infinite; }
+
+  .messages-area { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
+  .enc-notice { align-self: center; background: #FFF3C4; color: #6B5900; font-size: 11.5px; padding: 7px 14px; border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  [data-theme="dark"] .enc-notice { background: #2A2712; color: #E0D48A; }
+  .enc-notice svg { width: 13px; height: 13px; }
+
+  .day-divider { align-self: center; background: var(--surface-alt); color: var(--text-secondary); font-size: 11.5px; font-weight: 600; padding: 5px 14px; border-radius: 10px; margin: 12px 0 10px; }
+
+  .msg-row { display: flex; margin-bottom: 2px; position: relative; }
+  .msg-row.me { justify-content: flex-end; }
+  .bubble-wrap { position: relative; max-width: 60%; }
+  .bubble { padding: 9px 13px; font-size: 14.5px; line-height: 1.4; box-shadow: 0 1px 3px rgba(0,0,0,0.1); word-wrap: break-word; border: 1px solid transparent; }
+  .msg-row.them .bubble { background: var(--bubble-them); border-radius: 4px 16px 16px 16px; border-color: var(--border); }
+  .msg-row.me .bubble { background: var(--bubble-me); color: #fff; border-radius: 16px 4px 16px 16px; }
+  .bubble.deleted { font-style: italic; opacity: .6; }
+  .bubble.failed { border-color: var(--danger); }
+  .bubble-sender { font-size: 11.5px; font-weight: 700; margin-bottom: 3px; color: var(--indigo); }
+  [data-theme="dark"] .bubble-sender { color: #8C9AFF; }
+  .bubble-time { font-size: 10px; opacity: .65; margin-top: 4px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+  .bubble-time .ticks { display: inline-flex; }
+  .retry-btn { background: none; border: none; color: var(--danger); font-size: 10.5px; font-weight: 700; cursor: pointer; padding: 0; text-decoration: underline; }
+  .msg-row.them .retry-btn { display: none; }
+  .msg-actions { display: none; gap: 3px; position: absolute; top: -14px; right: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .msg-row.me:hover .msg-actions { display: flex; }
+  .msg-actions button { width: 24px; height: 24px; border: none; background: transparent; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; border-radius: 5px; }
+  .msg-actions button:hover { background: var(--surface-alt); }
+  .msg-actions svg { width: 13px; height: 13px; }
+
+  /* Voice note bubble */
+  .voice-bubble { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+  .voice-play-btn { width: 32px; height: 32px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .msg-row.me .voice-play-btn { background: rgba(255,255,255,0.25); color: #fff; }
+  .msg-row.them .voice-play-btn { background: var(--indigo); color: #fff; }
+  .voice-play-btn svg { width: 14px; height: 14px; }
+  .voice-waveform { flex: 1; height: 24px; display: flex; align-items: center; gap: 2px; }
+  .voice-waveform span { width: 3px; border-radius: 2px; background: currentColor; opacity: .5; }
+  .voice-duration { font-size: 11px; opacity: .8; flex-shrink: 0; }
+
+  /* Image bubble */
+  .image-bubble { border-radius: 12px; overflow: hidden; max-width: 260px; cursor: pointer; display: block; }
+  .image-bubble img { width: 100%; max-height: 320px; object-fit: cover; display: block; background: var(--surface-alt); }
+  .image-bubble.uploading { opacity: .55; }
+
+  /* File bubble */
+  .file-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; text-decoration: none; color: inherit; }
+  .file-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .msg-row.me .file-icon { background: rgba(255,255,255,0.25); }
+  .msg-row.them .file-icon { background: rgba(59,76,224,0.12); color: var(--indigo); }
+  .file-icon svg { width: 17px; height: 17px; }
+  .file-info { min-width: 0; flex: 1; }
+  .file-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-size { font-size: 11px; opacity: .75; }
+
+  /* Lightbox for full-size images */
+  .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 400; cursor: zoom-out; }
+  .lightbox-overlay.open { display: flex; }
+  .lightbox-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+
+  .composer { display: flex; align-items: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; position: relative; }
+  .composer-input-wrap { flex: 1; display: flex; align-items: center; background: var(--surface-alt); border-radius: 22px; padding: 0 6px 0 18px; }
+  .composer-input { flex: 1; background: transparent; padding: 11px 0; border: none; font-size: 14.5px; color: var(--text); font-family: 'Vazirmatn', sans-serif; outline: none; }
+  .emoji-toggle-btn { width: 34px; height: 34px; border-radius: 50%; border: none; background: transparent; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 18px; }
+  .emoji-toggle-btn:hover { background: var(--border); }
+  .attach-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: var(--surface-alt); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .attach-btn:hover { background: var(--border); }
+  .attach-btn svg { width: 19px; height: 19px; }
+  .send-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--indigo); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .send-btn svg { width: 18px; height: 18px; }
+
+  /* Hold-to-record mic button */
+  .mic-btn {
+    width: 42px; height: 42px; border-radius: 50%; border: none; color: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+    background: var(--surface-alt); color: var(--text-secondary); transition: all .15s; position: relative; user-select: none;
+  }
+  .mic-btn svg { width: 19px; height: 19px; }
+  .mic-btn.recording {
+    background: var(--danger); color: #fff; transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(226,76,79,0.15);
+    animation: mic-pulse 1.2s infinite;
+  }
+  @keyframes mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 8px rgba(226,76,79,0.15); }
+    50% { box-shadow: 0 0 0 14px rgba(226,76,79,0.08); }
+  }
+  .recording-banner {
+    position: absolute; bottom: 100%; left: 0; right: 0; background: var(--danger); color: #fff;
+    padding: 10px 20px; display: none; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600;
+  }
+  .recording-banner.active { display: flex; }
+  .recording-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: rec-blink 1s infinite; }
+  @keyframes rec-blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+  .recording-hint { margin-left: auto; opacity: .85; font-weight: 400; font-size: 12px; }
+
+  /* Emoji picker */
+  .emoji-picker { position: absolute; bottom: 100%; left: 20px; margin-bottom: 10px; width: 320px; max-height: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.18); display: none; flex-direction: column; overflow: hidden; z-index: 150; }
+  .emoji-picker.open { display: flex; }
+  .emoji-picker-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .emoji-picker-tab { flex: 1; padding: 8px 4px; text-align: center; font-size: 16px; background: none; border: none; cursor: pointer; opacity: .5; border-bottom: 2px solid transparent; }
+  .emoji-picker-tab.active { opacity: 1; border-bottom-color: var(--indigo); }
+  .emoji-picker-grid { flex: 1; overflow-y: auto; padding: 8px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .emoji-picker-grid button { border: none; background: none; font-size: 20px; padding: 6px 0; border-radius: 8px; cursor: pointer; line-height: 1; }
+  .emoji-picker-grid button:hover { background: var(--surface-alt); }
+
+  /* Typing indicator dots (inside message bubble area) */
+  .typing-indicator { display: inline-flex; align-items: center; gap: 3px; padding: 2px 4px; }
+  .typing-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); animation: typing-bounce 1.2s infinite; }
+  .typing-indicator span:nth-child(2) { animation-delay: .15s; }
+  .typing-indicator span:nth-child(3) { animation-delay: .3s; }
+  @keyframes typing-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .modal-overlay.open { display: flex; }
+  .modal { width: 100%; max-width: 420px; background: var(--surface); border-radius: 18px; padding: 24px; margin: 20px; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text-secondary); }
+  .search-result { display: flex; align-items: center; gap: 12px; background: var(--surface-alt); border-radius: 12px; padding: 12px; margin-top: 14px; }
+  .modal-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; text-align: left; }
+  .search-mode-switch { display: flex; background: var(--surface-alt); border-radius: 10px; padding: 3px; margin-bottom: 12px; }
+  .search-mode-btn { flex: 1; padding: 7px; border: none; background: transparent; border-radius: 7px; font-family: 'Vazirmatn', sans-serif; font-weight: 600; font-size: 12.5px; color: var(--text-secondary); cursor: pointer; }
+  .search-mode-btn.active { background: var(--surface); color: var(--indigo); }
+
+  /* ---------- Toast ---------- */
+  .toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 12.5px; display: flex; align-items: center; gap: 8px; z-index: 300; box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+  .toast.hidden { display: none; }
+  .toast-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0; }
+  .toast-dot.connected { background: var(--online); }
+  .toast-dot.error { background: var(--danger); }
+
+  /* ---------- Settings dropdown ---------- */
+  .settings-menu { position: absolute; top: 54px; right: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 8px; width: 250px; z-index: 100; display: none; }
+  .settings-menu.open { display: block; }
+  .settings-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+  .settings-item:hover { background: var(--surface-alt); }
+  .settings-user { padding: 10px 12px 14px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+  .settings-user-name { font-weight: 700; font-size: 14px; }
+  .settings-user-phone { font-size: 12px; color: var(--text-secondary); }
+  .settings-user-id { font-size: 10.5px; color: var(--text-faint); font-family: monospace; margin-top: 3px; word-break: break-all; }
+
+  .toggle { width: 38px; height: 22px; border-radius: 11px; background: var(--border); position: relative; cursor: pointer; flex-shrink: 0; }
+  .toggle.on { background: var(--indigo); }
+  .toggle-knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; position: absolute; top: 3px; left: 3px; transition: left .2s; }
+  .toggle.on .toggle-knob { left: 19px; }
+
+  /* ---------- Profile modal ---------- */
+  .profile-modal { max-width: 380px; padding: 0; overflow: hidden; }
+  .profile-cover { background: linear-gradient(135deg, var(--indigo), var(--indigo-deep)); padding: 28px 24px 20px; text-align: center; position: relative; }
+  .profile-modal-close { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .profile-avatar-lg { width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 32px; margin: 0 auto 14px; border: 3px solid rgba(255,255,255,0.5); position: relative; overflow: hidden; }
+  .profile-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-avatar-edit { position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--coral); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; }
+  .profile-avatar-edit svg { width: 14px; height: 14px; }
+  .profile-name { font-size: 19px; font-weight: 700; color: #fff; }
+  .profile-username { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+  .profile-body { padding: 20px 24px 24px; }
+  .profile-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--surface-alt); color: var(--indigo); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .profile-row-icon svg { width: 16px; height: 16px; }
+  .profile-row-content { flex: 1; min-width: 0; }
+  .profile-row-label { font-size: 11px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+  .profile-row-value { font-size: 14px; margin-top: 2px; word-break: break-word; }
+  .profile-row-value.editable-bio { cursor: text; }
+  .profile-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); display: inline-block; margin-right: 5px; }
+  .profile-status-dot.online { background: var(--online); }
+  .profile-bio-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; font-family: 'Vazirmatn', sans-serif; resize: none; background: var(--surface-alt); color: var(--text); margin-top: 4px; }
+  .profile-save-row { display: flex; justify-content: flex-end; margin-top: 8px; gap: 8px; }
+  .profile-save-row button { padding: 6px 14px; font-size: 12.5px; border-radius: 14px; border: none; cursor: pointer; font-family: 'Vazirmatn', sans-serif; font-weight: 600; }
+  .profile-save-row .save-btn { background: var(--indigo); color: #fff; }
+  .profile-save-row .cancel-btn { background: var(--surface-alt); color: var(--text-secondary); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body data-theme="light">
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">پ</div>
+
+    <div class="auth-mode-switch">
+      <button class="auth-mode-btn active" id="authModeSignupBtn" onclick="switchAuthMode('signup')">Sign up</button>
+      <button class="auth-mode-btn" id="authModeLoginBtn" onclick="switchAuthMode('login')">Log in</button>
+    </div>
+
+    <!-- SIGNUP: step 1, phone -->
+    <div id="signupStepPhone">
+      <div class="auth-title">Verify your number</div>
+      <div class="auth-sub">We'll send a code to make sure it's really you. This is a one-time step per phone number.</div>
+      <label class="field-label">Phone number</label>
+      <div class="field-row">
+        <div class="country-code">🇮🇷 +98</div>
+        <input class="field" id="phoneInput" placeholder="912 345 6789" autocomplete="off" inputmode="numeric" style="margin-bottom:0;">
+      </div>
+      <div class="auth-error" id="phoneError"></div>
+      <button class="btn-primary" id="sendCodeBtn" onclick="requestCode()">Send code</button>
+      <div class="auth-foot">🔒 Messages are end-to-end encrypted. We can't read them.</div>
+    </div>
+
+    <!-- SIGNUP: step 2, code + account details -->
+    <div id="signupStepDetails" style="display:none;">
+      <div class="auth-title">Create your account</div>
+      <div class="auth-sub" id="otpSentTo">Sent to your number</div>
+      <div class="otp-hint">Dev mode — the code is always <strong>123456</strong></div>
+
+      <label class="field-label">Verification code</label>
+      <input class="field" id="codeInput" placeholder="••••••" style="text-align:center;font-size:18px;letter-spacing:6px;">
+
+      <label class="field-label">Username</label>
+      <input class="field" id="usernameInput" placeholder="letters, numbers, _ only">
+
+      <label class="field-label">Display name</label>
+      <input class="field" id="signupNameInput" placeholder="e.g. Maman, Amoo Reza…">
+
+      <label class="field-label">Password</label>
+      <input class="field" id="signupPasswordInput" type="password" placeholder="At least 6 characters" style="margin-bottom:4px;">
+
+      <div class="auth-error" id="signupError"></div>
+      <button class="btn-primary" id="signupBtn" onclick="submitSignup()">Create account</button>
+      <button class="btn-text" onclick="backToPhoneStep()">← Use a different number</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginStep" style="display:none;">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Log in with your username or phone number.</div>
+
+      <label class="field-label">Username or phone</label>
+      <input class="field" id="loginIdentifierInput" placeholder="username or +98912345678">
+
+      <label class="field-label">Password</label>
+      <input class="field" id="loginPasswordInput" type="password" placeholder="Your password" style="margin-bottom:4px;">
+
+      <div class="auth-error" id="loginError"></div>
+      <button class="btn-primary" id="loginBtn" onclick="submitLogin()">Log in</button>
+    </div>
+
+    <div class="server-config">
+      <span class="server-badge"><span class="server-dot" id="serverDot"></span> Server:</span>
+      <span style="font-family:monospace;">doorstep-quench-macaw.ngrok-free.dev</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MAIN APP ===================== -->
+<div class="app-shell" id="appShell" style="display:none;">
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">Peyk</div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="switchTab('requests')" title="Contact requests">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="badge-dot" id="pendingBadge" style="display:none;">0</span>
+        </button>
+        <button class="icon-btn" onclick="toggleSettingsMenu()" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="me-strip">
+      <div class="avatar" id="meStripAvatar">?</div>
+      <div class="me-strip-info">
+        <div class="me-strip-name" id="meStripName">— <span class="invisible-chip" id="invisibleChip" style="display:none;">Invisible</span></div>
+        <div class="me-strip-phone" id="meStripPhone">—</div>
+      </div>
+      <button class="switch-account-btn" onclick="logout()">Switch</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabChats" onclick="switchTab('chats')">Chats</button>
+      <button class="tab" id="tabRequests" onclick="switchTab('requests')">Requests</button>
+    </div>
+
+    <div class="list-area" id="chatsList"></div>
+    <div class="list-area" id="requestsList" style="display:none;"></div>
+
+    <button class="fab" onclick="openAddContact()" title="New chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+
+  <div class="main-panel" id="mainPanel">
+    <div class="panel-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div>Select a chat to start messaging</div>
+    </div>
+  </div>
+
+  <div class="settings-menu" id="settingsMenu">
+    <div class="settings-user">
+      <div class="settings-user-name" id="settingsUserName">—</div>
+      <div class="settings-user-phone" id="settingsUserPhone">—</div>
+      <div class="settings-user-phone" id="settingsUserUsername">—</div>
+      <div class="settings-user-id" id="settingsUserId" title="Click to copy your user ID">—</div>
+    </div>
+    <div class="settings-item">
+      <span>Dark mode</span>
+      <div class="toggle" id="darkToggle" onclick="toggleDarkMode()"><div class="toggle-knob"></div></div>
+    </div>
+    <div class="settings-item">
+      <span>Appear invisible</span>
+      <div class="toggle" id="invisibleToggle" onclick="toggleInvisible()"><div class="toggle-knob"></div></div>
+    </div>
+    <div class="settings-item" onclick="copyMyId()">
+      <span>Copy my user ID</span>
+    </div>
+    <div class="settings-item" onclick="logout()" style="color:var(--danger);">
+      <span>Log out</span>
+    </div>
+  </div>
+</div>
+
+<!-- Add contact modal -->
+<div class="modal-overlay" id="addContactModal">
+  <div class="modal">
+    <div class="modal-title">
+      New chat
+      <button class="modal-close" onclick="closeAddContact()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="search-mode-switch">
+      <button class="search-mode-btn active" id="searchModePhoneBtn" onclick="setSearchMode('phone')">By phone</button>
+      <button class="search-mode-btn" id="searchModeUsernameBtn" onclick="setSearchMode('username')">By username</button>
+    </div>
+    <div class="modal-sub" id="searchModeHint">Search for someone by the exact phone number they signed up with.</div>
+    <input class="field" id="searchInput" placeholder="+98912345678" style="margin-bottom:10px;">
+    <button class="btn-primary" onclick="searchContact()">Search</button>
+    <div id="searchResultArea"></div>
+  </div>
+</div>
+
+<!-- Profile modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal profile-modal" id="profileModalContent">
+    <!-- filled by renderProfileModal() -->
+  </div>
+</div>
+
+<!-- Hidden file input for avatar upload -->
+<input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarPicked(this)">
+
+<!-- Lightbox for full-size image viewing -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="imageFileInput" accept="image/*" style="display:none;" onchange="handleFilePicked(this, 'image')">
+<input type="file" id="anyFileInput" style="display:none;" onchange="handleFilePicked(this, 'file')">
+
+<!-- Toast -->
+<div class="toast hidden" id="toast">
+  <div class="toast-dot" id="toastDot"></div>
+  <span id="toastText"></span>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let token = null;
+let me = null;
+let ws = null;
+let wsReconnectTimer = null;
+let wsConnected = false;
+let contacts = [];
+let pending = [];
+let activeContact = null;
+let messagesByContact = {};
+let messagesLoadedFor = new Set();
+let unreadCounts = {};
+let onlineStatus = {}; // contactId -> bool
+let typingStatus = {}; // contactId -> timeout handle (present = currently typing)
+let searchMode = 'phone'; // 'phone' | 'username'
+let searchResultUser = null;
+
+// Queue of { type, payload } WS sends that haven't been confirmed yet.
+// On reconnect we replay anything still pending so a dropped connection
+// mid-send doesn't silently lose a message - this used to be the reason
+// "it sometimes takes forever to send, then insta-sends after refresh":
+// the message was sitting in the browser having never actually reached
+// a live socket, and only got flushed once a fresh connection (from the
+// refresh) picked it back up via the normal send path.
+let outbox = [];
+
+// Voice recording state
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordingStartTime = null;
+let recordingTimerInterval = null;
+
+// Typing debounce (outgoing)
+let typingSendTimer = null;
+let lastTypingSentAt = 0;
+
+const AVATAR_COLORS = ['#3B4CE0','#FF6F59','#3B8FD9','#D9614F','#E0A73E','#8A6DE0','#25B583'];
+function colorFor(id) {
+  let hash = 0;
+  for (const c of String(id)) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+function initials(name) {
+  const parts = (name || '?').trim().split(/\s+/);
+  if (!parts[0]) return '?';
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
+// Renders either an uploaded profile picture (if the user has one) or
+// a colored initials circle - used everywhere an avatar shows up so
+// switching to a real photo doesn't require touching every call site.
+function avatarInnerHtml(user) {
+  if (user && user.avatarAttachmentId) {
+    return `<img src="${serverUrl()}/attachments/${user.avatarAttachmentId}" alt="">`;
+  }
+  return escapeHtml(initials(user ? user.displayName : '?'));
+}
+// Hardcoded to the ngrok domain, per your request - this is no longer
+// an editable field. Change this one line when your ngrok domain
+// changes (free-tier domains rotate on restart unless you have a
+// reserved domain on a paid ngrok plan).
+const SERVER_URL = 'https://doorstep-quench-macaw.ngrok-free.dev';
+function serverUrl() { return SERVER_URL; }
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer = null;
+function showToast(text, state = '') {
+  const el = document.getElementById('toast');
+  const dot = document.getElementById('toastDot');
+  document.getElementById('toastText').textContent = text;
+  dot.className = 'toast-dot' + (state ? ' ' + state : '');
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  if (state === 'connected') toastTimer = setTimeout(() => el.classList.add('hidden'), 1800);
+}
+function hideToast() { document.getElementById('toast').classList.add('hidden'); }
+
+// ============================================================
+// SERVER HEALTH CHECK
+// ============================================================
+async function checkServerHealth() {
+  const dot = document.getElementById('serverDot');
+  if (!dot) return false;
+  dot.className = 'server-dot';
+  try {
+    const res = await fetch(serverUrl() + '/health', { headers: { 'ngrok-skip-browser-warning': 'true' }, signal: AbortSignal.timeout(4000) });
+    if (res.ok) { dot.className = 'server-dot ok'; return true; }
+    dot.className = 'server-dot down';
+    return false;
+  } catch (e) {
+    dot.className = 'server-dot down';
+    return false;
+  }
+}
+
+function normalizePhone(raw, countryCode) {
+  let digits = String(raw).replace(/[^\d+]/g, '');
+  if (digits.startsWith('+')) return digits;
+  digits = digits.replace(/^0+/, '');
+  return countryCode + digits;
+}
+
+// ============================================================
+// API HELPERS
+// ============================================================
+async function api(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  // ngrok's free tier serves an interstitial "you're about to visit..."
+  // HTML warning page on the FIRST request from any new client/browser,
+  // instead of forwarding straight to the actual API. Without this
+  // header, that warning page comes back where JSON was expected, the
+  // res.json() parse below fails, and everything downstream silently
+  // breaks (looks exactly like "signed in, but nothing else worked").
+  headers['ngrok-skip-browser-warning'] = 'true';
+  let res;
+  try {
+    res = await fetch(serverUrl() + path, { ...options, headers, signal: AbortSignal.timeout(15000) });
+  } catch (e) {
+    throw new Error('Cannot reach server at ' + serverUrl() + ' — is the backend running?');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+// ============================================================
+// AUTH: mode switching
+// ============================================================
+function switchAuthMode(mode) {
+  document.getElementById('authModeSignupBtn').classList.toggle('active', mode === 'signup');
+  document.getElementById('authModeLoginBtn').classList.toggle('active', mode === 'login');
+  document.getElementById('signupStepPhone').style.display = mode === 'signup' ? 'block' : 'none';
+  document.getElementById('signupStepDetails').style.display = 'none';
+  document.getElementById('loginStep').style.display = mode === 'login' ? 'block' : 'none';
+}
+
+function setFieldError(inputId, has) {
+  const el = document.getElementById(inputId);
+  if (el) el.classList.toggle('err', has);
+}
+
+// ============================================================
+// AUTH: signup flow (phone verify -> username/name/password)
+// ============================================================
+let pendingPhone = null;
+const COUNTRY_CODE = '+98';
+
+async function requestCode() {
+  const raw = document.getElementById('phoneInput').value.trim();
+  const errEl = document.getElementById('phoneError');
+  errEl.textContent = '';
+  setFieldError('phoneInput', false);
+
+  if (raw.replace(/\D/g, '').length < 6) {
+    errEl.textContent = 'Enter a valid phone number';
+    setFieldError('phoneInput', true);
+    return;
+  }
+
+  const phone = normalizePhone(raw, COUNTRY_CODE);
+  const btn = document.getElementById('sendCodeBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  try {
+    await api('/auth/request-code', { method: 'POST', body: JSON.stringify({ phone }) });
+    pendingPhone = phone;
+    document.getElementById('otpSentTo').textContent = 'Sent to ' + phone;
+    document.getElementById('codeInput').value = '';
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('signupNameInput').value = '';
+    document.getElementById('signupPasswordInput').value = '';
+    document.getElementById('signupError').textContent = '';
+    document.getElementById('signupStepPhone').style.display = 'none';
+    document.getElementById('signupStepDetails').style.display = 'block';
+    document.getElementById('codeInput').focus();
+  } catch (e) {
+    errEl.textContent = e.message;
+    setFieldError('phoneInput', true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send code';
+  }
+}
+
+function backToPhoneStep() {
+  document.getElementById('signupStepDetails').style.display = 'none';
+  document.getElementById('signupStepPhone').style.display = 'block';
+  pendingPhone = null;
+}
+
+async function submitSignup() {
+  const code = document.getElementById('codeInput').value.trim();
+  const username = document.getElementById('usernameInput').value.trim();
+  const displayName = document.getElementById('signupNameInput').value.trim();
+  const password = document.getElementById('signupPasswordInput').value;
+  const errEl = document.getElementById('signupError');
+  errEl.textContent = '';
+  ['codeInput','usernameInput','signupNameInput','signupPasswordInput'].forEach(id => setFieldError(id, false));
+
+  if (!pendingPhone) { errEl.textContent = 'Something went wrong — go back and re-enter your number'; return; }
+  if (!code) { errEl.textContent = 'Enter the code'; setFieldError('codeInput', true); return; }
+  if (username.length < 3) { errEl.textContent = 'Username must be at least 3 characters'; setFieldError('usernameInput', true); return; }
+  if (!displayName) { errEl.textContent = 'Enter your name'; setFieldError('signupNameInput', true); return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters'; setFieldError('signupPasswordInput', true); return; }
+
+  const btn = document.getElementById('signupBtn');
+  btn.disabled = true; btn.textContent = 'Creating account…';
+
+  try {
+    const data = await api('/auth/verify-and-signup', {
+      method: 'POST',
+      body: JSON.stringify({ phone: pendingPhone, code, username, displayName, password }),
+    });
+    completeLogin(data);
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create account';
+  }
+}
+
+// ============================================================
+// AUTH: login flow
+// ============================================================
+async function submitLogin() {
+  const identifier = document.getElementById('loginIdentifierInput').value.trim();
+  const password = document.getElementById('loginPasswordInput').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+
+  if (!identifier || !password) { errEl.textContent = 'Enter your username/phone and password'; return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Logging in…';
+
+  try {
+    const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) });
+    completeLogin(data);
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Log in';
+  }
+}
+
+function completeLogin(data) {
+  token = data.token;
+  me = data.user;
+  localStorage.setItem('peyk_token', token);
+  localStorage.setItem('peyk_me', JSON.stringify(me));
+  pendingPhone = null;
+  enterApp();
+}
+
+function logout() {
+  token = null; me = null; activeContact = null;
+  contacts = []; pending = []; onlineStatus = {}; typingStatus = {};
+  messagesByContact = {}; messagesLoadedFor = new Set(); unreadCounts = {}; outbox = [];
+  localStorage.removeItem('peyk_token');
+  localStorage.removeItem('peyk_me');
+  if (ws) { ws.onclose = null; ws.close(); }
+  clearTimeout(wsReconnectTimer);
+  document.getElementById('settingsMenu').classList.remove('open');
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+  switchAuthMode('signup');
+  document.getElementById('phoneInput').value = '';
+  hideToast();
+}
+
+function tryRestoreSession() {
+  const t = localStorage.getItem('peyk_token');
+  const m = localStorage.getItem('peyk_me');
+  checkServerHealth();
+  if (t && m) {
+    try {
+      token = t; me = JSON.parse(m);
+      enterApp();
+    } catch (e) {
+      localStorage.removeItem('peyk_token');
+      localStorage.removeItem('peyk_me');
+    }
+  }
+}
+
+let pendingPollInterval = null;
+
+function enterApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'flex';
+
+  document.getElementById('settingsUserName').textContent = me.displayName;
+  document.getElementById('settingsUserPhone').textContent = me.phone;
+  document.getElementById('settingsUserUsername').textContent = '@' + (me.username || '—');
+  document.getElementById('settingsUserId').textContent = me.id;
+
+  document.getElementById('meStripName').innerHTML = escapeHtml(me.displayName) +
+    ` <span class="invisible-chip" id="invisibleChip" style="display:${me.statusMode === 'invisible' ? 'inline-block' : 'none'};">Invisible</span>`;
+  document.getElementById('meStripPhone').textContent = '@' + (me.username || me.phone);
+  const meAvatar = document.getElementById('meStripAvatar');
+  meAvatar.innerHTML = avatarInnerHtml(me);
+  meAvatar.style.background = colorFor(me.id);
+  meAvatar.style.cursor = 'pointer';
+  meAvatar.onclick = () => openProfile(me.id);
+
+  document.getElementById('invisibleToggle').classList.toggle('on', me.statusMode === 'invisible');
+
+  connectWs();
+  refreshContacts();
+  refreshPending();
+  // Guard against stacking a second polling interval if enterApp() were
+  // ever called twice in one page session (e.g. a fast double-login) -
+  // two intervals means every 8s tick fires twice, doubling request
+  // volume for no reason and adding noise that made timing-sensitive
+  // bugs (like the WS reconnect churn) harder to diagnose from the logs.
+  if (pendingPollInterval) clearInterval(pendingPollInterval);
+  pendingPollInterval = setInterval(refreshPending, 8000);
+}
+
+function copyMyId() {
+  navigator.clipboard.writeText(me.id).then(() => showToast('User ID copied', 'connected'));
+}
+
+async function toggleInvisible() {
+  const next = me.statusMode === 'invisible' ? 'online' : 'invisible';
+  try {
+    await api('/user/status', { method: 'POST', body: JSON.stringify({ statusMode: next }) });
+    me.statusMode = next;
+    localStorage.setItem('peyk_me', JSON.stringify(me));
+    document.getElementById('invisibleToggle').classList.toggle('on', next === 'invisible');
+    document.getElementById('invisibleChip').style.display = next === 'invisible' ? 'inline-block' : 'none';
+    showToast(next === 'invisible' ? "You're now invisible to contacts" : "You're visible again", 'connected');
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+// ============================================================
+// WEBSOCKET
+// ============================================================
+function connectWs() {
+  // Guard against ever having two live sockets for the same session.
+  // Nothing previously stopped connectWs() from being called twice in
+  // a row (e.g. a slow network making the first connection attempt
+  // still 'CONNECTING' when something else - a re-render, a second
+  // enterApp() call - triggered another one). Two live sockets means
+  // the server sees "connected (2 active)", each one independently
+  // pings/pongs and eventually times out on its own schedule, which
+  // is exactly the connected-then-disconnected churn in the server
+  // log, and made receiving a message:send confirmation unreliable -
+  // matching the flaky/slow voice and file sends.
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
+  if (ws) {
+    ws.onclose = null; // don't let the old socket's close handler schedule ANOTHER reconnect
+    ws.close();
+  }
+
+  // Same ngrok interstitial issue as regular fetch() calls applies to the
+  // WS upgrade request too - the browser WebSocket API can't set custom
+  // headers, so the skip-warning flag goes as a query param instead,
+  // which ngrok also honors.
+  const wsUrl = serverUrl().replace(/^http/, 'ws') + '/ws?token=' + token + '&ngrok-skip-browser-warning=true';
+  ws = new WebSocket(wsUrl);
+  showToast('Connecting…');
+  ws.onopen = () => {
+    wsConnected = true;
+    showToast('Connected', 'connected');
+    updateConnPill();
+    // Replay anything that was queued while we were disconnected -
+    // this is what stops a message from sitting stuck until a manual
+    // refresh happens to reconnect and flush it.
+    flushOutbox();
+    // Also re-pull contacts/pending, since presence/contact events
+    // that fired while we were offline wouldn't have reached us.
+    refreshContacts();
+    refreshPending();
+  };
+  ws.onclose = () => {
+    wsConnected = false;
+    updateConnPill();
+    showToast('Disconnected — retrying…', 'error');
+    clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = setTimeout(() => { if (token) connectWs(); }, 3000);
+  };
+  ws.onerror = () => showToast('Connection error', 'error');
+  ws.onmessage = (e) => handleWsMessage(JSON.parse(e.data));
+}
+
+function updateConnPill() {
+  const el = document.getElementById('connPill');
+  if (!el) return;
+  el.classList.toggle('live', wsConnected);
+  el.classList.toggle('down', !wsConnected);
+  el.querySelector('.label').textContent = wsConnected ? 'Live' : 'Reconnecting…';
+}
+
+function handleWsMessage(data) {
+  if (data.type === 'presence') {
+    onlineStatus[data.userId] = data.online;
+    renderChatsList();
+    if (activeContact && activeContact.id === data.userId) updateChatHeaderStatus();
+    return;
+  }
+
+  if (data.type === 'contact:accepted') {
+    // Pushed the instant either side accepts a request - previously
+    // this only reached the DB, so the new contact wouldn't show up
+    // in either person's chat list until something refetched it
+    // (a manual refresh, or the requester's next 8s pending-poll).
+    const c = data.contact;
+    if (!contacts.find(x => x.id === c.id)) contacts.push(c);
+    renderChatsList();
+    showToast(c.displayName + ' accepted your request', 'connected');
+    refreshPending();
+    return;
+  }
+
+  if (data.type === 'contact:request') {
+    refreshPending();
+    return;
+  }
+
+  if (data.type === 'contact:removed') {
+    contacts = contacts.filter(c => c.id !== data.contactUserId);
+    if (activeContact && activeContact.id === data.contactUserId) {
+      activeContact = null;
+      renderPlaceholderPanel();
+    }
+    renderChatsList();
+    return;
+  }
+
+  if (data.type === 'typing') {
+    const fromId = data.fromId;
+    clearTimeout(typingStatus[fromId]);
+    typingStatus[fromId] = setTimeout(() => {
+      delete typingStatus[fromId];
+      renderChatsList();
+      if (activeContact && activeContact.id === fromId) updateChatHeaderStatus();
+    }, 3500);
+    renderChatsList();
+    if (activeContact && activeContact.id === fromId) updateChatHeaderStatus();
+    return;
+  }
+
+  if (data.type === 'message:new') {
+    const otherId = data.senderId === me.id ? data.recipientId : data.senderId;
+    if (!messagesByContact[otherId]) messagesByContact[otherId] = [];
+
+    // Clear any typing indicator from this sender - a message arriving
+    // implies they've stopped typing.
+    if (typingStatus[otherId]) {
+      clearTimeout(typingStatus[otherId]);
+      delete typingStatus[otherId];
+    }
+
+    if (data.clientMsgId) {
+      const idx = messagesByContact[otherId].findIndex(m => m.id === data.clientMsgId);
+      if (idx !== -1) {
+        // Replace the optimistic local entry with the confirmed server
+        // copy, but keep it as the SAME array entry (same position) -
+        // full attachment metadata now always comes back from the
+        // server (attachment / attachmentId), so voice notes and files
+        // render correctly right away without needing a reload.
+        messagesByContact[otherId][idx] = { ...data, pending: false, failed: false };
+        outbox = outbox.filter(o => o.clientMsgId !== data.clientMsgId);
+      } else {
+        messagesByContact[otherId].push(data);
+      }
+    } else {
+      messagesByContact[otherId].push(data);
+    }
+
+    const isChatOpen = activeContact && activeContact.id === otherId;
+    const isIncoming = data.senderId !== me.id;
+
+    if (isChatOpen) {
+      renderMessages();
+    } else if (isIncoming) {
+      unreadCounts[otherId] = (unreadCounts[otherId] || 0) + 1;
+      showToast('New message from ' + (contacts.find(c => c.id === otherId)?.displayName || 'a contact'), 'connected');
+    }
+    renderChatsList();
+    return;
+  }
+
+  if (data.type === 'message:delivered') {
+    for (const contactId in messagesByContact) {
+      const idx = messagesByContact[contactId].findIndex(m => m.id === data.messageId);
+      if (idx !== -1) {
+        messagesByContact[contactId][idx] = { ...messagesByContact[contactId][idx], deliveredAt: data.deliveredAt };
+        if (activeContact && activeContact.id === contactId) renderMessages();
+        break;
+      }
+    }
+    return;
+  }
+
+  if (data.type === 'message:read') {
+    for (const contactId in messagesByContact) {
+      const idx = messagesByContact[contactId].findIndex(m => m.id === data.messageId);
+      if (idx !== -1) {
+        messagesByContact[contactId][idx] = { ...messagesByContact[contactId][idx], readAt: data.readAt };
+        if (activeContact && activeContact.id === contactId) renderMessages();
+        break;
+      }
+    }
+    return;
+  }
+
+  if (data.type === 'message:edited') {
+    for (const contactId in messagesByContact) {
+      const idx = messagesByContact[contactId].findIndex(m => m.id === data.messageId);
+      if (idx !== -1) {
+        messagesByContact[contactId][idx] = { ...messagesByContact[contactId][idx], body: data.newBody, editedAt: data.editedAt };
+        if (activeContact && activeContact.id === contactId) renderMessages();
+        break;
+      }
+    }
+    return;
+  }
+
+  if (data.type === 'message:deleted') {
+    for (const contactId in messagesByContact) {
+      const idx = messagesByContact[contactId].findIndex(m => m.id === data.messageId);
+      if (idx !== -1) {
+        messagesByContact[contactId][idx] = { ...messagesByContact[contactId][idx], body: '', deletedAt: data.deletedAt };
+        if (activeContact && activeContact.id === contactId) renderMessages();
+        break;
+      }
+    }
+    return;
+  }
+
+  if (data.type === 'error') {
+    // A message:send this client sent got rejected server-side (e.g.
+    // contact was removed mid-flight). Mark the optimistic bubble as
+    // failed so the person can retry rather than it hanging forever.
+    if (data.clientMsgId) markMessageFailed(data.clientMsgId, data.error);
+    return;
+  }
+}
+
+// Sends over the socket if open; otherwise queues for replay once
+// reconnected. Every queued send also gets a local timeout - if it's
+// still unconfirmed (still 'pending') after 8s even though we think
+// we're connected, something's wrong (e.g. the send silently dropped)
+// and we mark it failed so the person gets a Retry button instead of
+// an indefinitely-spinning message.
+function wsSend(payload, opts = {}) {
+  const record = { payload, clientMsgId: payload.clientMsgId, attempts: 0 };
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify(payload));
+  } else {
+    outbox.push(record);
+    showToast('Offline — will send once reconnected', 'error');
+  }
+  if (payload.clientMsgId && !opts.noTimeout) {
+    setTimeout(() => {
+      const contactId = payload.recipientId;
+      const msgs = messagesByContact[contactId];
+      if (!msgs) return;
+      const msg = msgs.find(m => m.id === payload.clientMsgId);
+      if (msg && msg.pending) markMessageFailed(payload.clientMsgId, 'Timed out');
+    }, 8000);
+  }
+}
+
+function flushOutbox() {
+  if (outbox.length === 0) return;
+  const toSend = outbox;
+  outbox = [];
+  for (const record of toSend) {
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify(record.payload));
+    } else {
+      outbox.push(record);
+    }
+  }
+}
+
+function markMessageFailed(clientMsgId, errorText) {
+  for (const contactId in messagesByContact) {
+    const idx = messagesByContact[contactId].findIndex(m => m.id === clientMsgId);
+    if (idx !== -1) {
+      messagesByContact[contactId][idx] = { ...messagesByContact[contactId][idx], pending: false, failed: true, failReason: errorText };
+      if (activeContact && activeContact.id === contactId) renderMessages();
+      renderChatsList();
+      break;
+    }
+  }
+}
+
+function retryMessage(clientMsgId) {
+  if (!activeContact) return;
+  const msgs = messagesByContact[activeContact.id] || [];
+  const msg = msgs.find(m => m.id === clientMsgId);
+  if (!msg) return;
+  msg.failed = false;
+  msg.pending = true;
+  renderMessages();
+  wsSend({
+    type: 'message:send',
+    recipientId: activeContact.id,
+    body: msg.body || '',
+    attachmentId: msg.attachmentId || undefined,
+    clientMsgId,
+  });
+}
+
+// ============================================================
+// CONTACTS + REQUESTS
+// ============================================================
+async function refreshContacts() {
+  try {
+    const data = await api('/contacts');
+    contacts = data.contacts;
+    renderChatsList();
+  } catch (e) { /* silent */ }
+}
+
+async function refreshPending() {
+  try {
+    const data = await api('/contacts/pending');
+    pending = data.pending;
+    renderRequestsList();
+    const badge = document.getElementById('pendingBadge');
+    if (pending.length > 0) { badge.style.display = 'flex'; badge.textContent = pending.length; }
+    else badge.style.display = 'none';
+  } catch (e) { /* silent */ }
+}
+
+function renderChatsList() {
+  const el = document.getElementById('chatsList');
+  if (contacts.length === 0) {
+    el.innerHTML = `<div class="empty-note">No chats yet.<br>Tap the + button to add a contact.</div>`;
+    return;
+  }
+  el.innerHTML = contacts.map(c => {
+    const unread = unreadCounts[c.id] || 0;
+    const online = !!onlineStatus[c.id];
+    const isTyping = !!typingStatus[c.id];
+    const lastMsg = (messagesByContact[c.id] || []).slice(-1)[0];
+    let previewText;
+    if (isTyping) {
+      previewText = 'typing…';
+    } else if (lastMsg) {
+      if (lastMsg.deletedAt) previewText = 'Message deleted';
+      else if (lastMsg.attachmentId) {
+        const kind = lastMsg.attachment?.kind;
+        previewText = (lastMsg.senderId === me.id ? 'You: ' : '') + (kind === 'image' ? '📷 Photo' : kind === 'file' ? '📎 File' : '🎤 Voice message');
+      } else {
+        previewText = (lastMsg.senderId === me.id ? 'You: ' : '') + lastMsg.body;
+      }
+    } else {
+      previewText = '@' + (c.username || c.phone);
+    }
+    return `
+    <div class="contact-row ${activeContact && activeContact.id === c.id ? 'selected' : ''} ${unread ? 'has-unread' : ''}" onclick="openChat('${c.id}')">
+      <div class="avatar ${online ? 'online' : ''}" style="background:${colorFor(c.id)}" onclick="event.stopPropagation(); openProfile('${c.id}')" title="View profile">${avatarInnerHtml(c)}</div>
+      <div class="contact-info">
+        <div class="contact-name">${escapeHtml(c.displayName)}</div>
+        <div class="contact-sub ${isTyping ? 'typing' : ''}">${escapeHtml(previewText)}</div>
+      </div>
+      ${unread ? `<div class="unread-count">${unread}</div>` : ''}
+    </div>
+  `;
+  }).join('');
+}
+
+function renderRequestsList() {
+  const el = document.getElementById('requestsList');
+  if (pending.length === 0) {
+    el.innerHTML = `<div class="empty-note">No pending contact requests.</div>`;
+    return;
+  }
+  el.innerHTML = pending.map(p => `
+    <div class="contact-row">
+      <div class="avatar" style="background:${colorFor(p.user.id)}">${initials(p.user.displayName)}</div>
+      <div class="contact-info">
+        <div class="contact-name">${escapeHtml(p.user.displayName)}</div>
+        <div class="contact-sub">@${escapeHtml(p.user.username || p.user.phone)} · wants to add you</div>
+      </div>
+      <div class="request-actions">
+        <button class="action-btn accept" onclick="respondRequest('${p.requestId}', true)" title="Accept">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+        </button>
+        <button class="action-btn decline" onclick="respondRequest('${p.requestId}', false)" title="Decline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function respondRequest(requestId, accept) {
+  try {
+    await api('/contacts/respond', { method: 'POST', body: JSON.stringify({ requestId, accept }) });
+    await refreshPending();
+    // The server also pushes a live contact:accepted event to both
+    // sides, but we still refetch here too so the accepting side's
+    // own list is correct immediately even if the WS push is delayed.
+    if (accept) { await refreshContacts(); showToast('Contact added', 'connected'); }
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function switchTab(tab) {
+  document.getElementById('tabChats').classList.toggle('active', tab === 'chats');
+  document.getElementById('tabRequests').classList.toggle('active', tab === 'requests');
+  document.getElementById('chatsList').style.display = tab === 'chats' ? 'block' : 'none';
+  document.getElementById('requestsList').style.display = tab === 'requests' ? 'block' : 'none';
+  if (tab === 'requests') refreshPending();
+}
+
+// ============================================================
+// ADD CONTACT MODAL (phone OR username search)
+// ============================================================
+function openAddContact() {
+  document.getElementById('addContactModal').classList.add('open');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResultArea').innerHTML = '';
+  searchResultUser = null;
+  document.getElementById('searchInput').focus();
+}
+function closeAddContact() { document.getElementById('addContactModal').classList.remove('open'); }
+
+function setSearchMode(mode) {
+  searchMode = mode;
+  document.getElementById('searchModePhoneBtn').classList.toggle('active', mode === 'phone');
+  document.getElementById('searchModeUsernameBtn').classList.toggle('active', mode === 'username');
+  document.getElementById('searchInput').placeholder = mode === 'phone' ? '+98912345678' : 'username';
+  document.getElementById('searchModeHint').textContent = mode === 'phone'
+    ? 'Search for someone by the exact phone number they signed up with.'
+    : 'Search for someone by their unique username.';
+  document.getElementById('searchResultArea').innerHTML = '';
+}
+
+async function searchContact() {
+  const value = document.getElementById('searchInput').value.trim();
+  const area = document.getElementById('searchResultArea');
+  if (!value) return;
+  area.innerHTML = '<div style="margin-top:14px;color:var(--text-secondary);font-size:13px;">Searching…</div>';
+  try {
+    const query = searchMode === 'phone' ? `?phone=${encodeURIComponent(value)}` : `?username=${encodeURIComponent(value)}`;
+    const data = await api('/contacts/search' + query);
+    const u = data.user;
+    searchResultUser = u;
+    area.innerHTML = `
+      <div class="search-result">
+        <div class="avatar" style="background:${colorFor(u.id)}">${initials(u.displayName)}</div>
+        <div class="contact-info">
+          <div class="contact-name">${escapeHtml(u.displayName)}</div>
+          <div class="contact-sub">@${escapeHtml(u.username || u.phone)}</div>
+        </div>
+        <button class="btn-primary" style="width:auto;margin:0;padding:9px 16px;font-size:13px;" onclick="sendContactRequest(this)">Add</button>
+      </div>
+    `;
+  } catch (e) {
+    area.innerHTML = `<div class="auth-error" style="margin-top:14px;">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function sendContactRequest(btnEl) {
+  if (!searchResultUser) return;
+  try {
+    const res = await api('/contacts/request', { method: 'POST', body: JSON.stringify({ targetUserId: searchResultUser.id }) });
+    btnEl.textContent = res.autoAccepted ? 'Added ✓' : 'Sent ✓';
+    btnEl.disabled = true;
+    showToast(res.autoAccepted ? 'You were already connected — added!' : 'Request sent', 'connected');
+    if (res.autoAccepted) await refreshContacts();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+// ============================================================
+// CHAT
+// ============================================================
+async function openChat(contactId) {
+  activeContact = contacts.find(c => c.id === contactId);
+  if (!activeContact) return;
+  delete unreadCounts[contactId];
+  renderChatsList();
+
+  if (!messagesLoadedFor.has(contactId)) {
+    try {
+      const data = await api('/messages/' + contactId);
+      messagesByContact[contactId] = data.messages;
+      messagesLoadedFor.add(contactId);
+    } catch (e) {
+      messagesByContact[contactId] = [];
+    }
+  }
+  renderChatPanel();
+}
+
+function renderPlaceholderPanel() {
+  const panel = document.getElementById('mainPanel');
+  panel.innerHTML = `
+    <div class="panel-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div>Select a chat to start messaging</div>
+    </div>
+  `;
+}
+
+function updateChatHeaderStatus() {
+  const el = document.getElementById('chatHeaderStatus');
+  if (!el || !activeContact) return;
+  const isTyping = !!typingStatus[activeContact.id];
+  const online = !!onlineStatus[activeContact.id];
+  if (isTyping) {
+    el.textContent = 'typing…';
+    el.className = 'chat-header-status typing';
+  } else {
+    el.textContent = online ? 'online' : 'offline';
+    el.className = 'chat-header-status' + (online ? ' online' : '');
+  }
+}
+
+function renderChatPanel() {
+  const panel = document.getElementById('mainPanel');
+  panel.innerHTML = `
+    <div class="chat-header">
+      <div class="avatar" style="background:${colorFor(activeContact.id)};cursor:pointer;" onclick="openProfile('${activeContact.id}')" title="View profile">${avatarInnerHtml(activeContact)}</div>
+      <div style="cursor:pointer;" onclick="openProfile('${activeContact.id}')">
+        <div class="chat-header-name">${escapeHtml(activeContact.displayName)}</div>
+        <div class="chat-header-status" id="chatHeaderStatus">offline</div>
+      </div>
+      <div class="chat-header-actions">
+        <div class="conn-pill" id="connPill"><span class="dot"></span><span class="label">Live</span></div>
+        <button class="icon-btn" title="Voice/video calling isn't wired into this web client yet — use the Flutter app for calls">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="messages-area" id="messagesArea"></div>
+    <div class="composer">
+      <div class="recording-banner" id="recordingBanner">
+        <div class="recording-dot"></div>
+        <span>Recording voice message… <span id="recordingTime">0:00</span></span>
+        <span class="recording-hint">Release to send · Esc to cancel</span>
+      </div>
+      <div class="emoji-picker" id="emojiPicker"></div>
+      <button class="attach-btn" id="attachBtn" title="Attach photo or file" onclick="toggleAttachMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05 12.25 20.24a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.67 3.67 0 0 1 5.19 5.19l-9.2 9.19a1.83 1.83 0 0 1-2.6-2.6l8.49-8.48"/></svg>
+      </button>
+      <div class="composer-input-wrap">
+        <button class="emoji-toggle-btn" onclick="toggleEmojiPicker()" title="Emoji">🙂</button>
+        <input class="composer-input" id="msgInput" placeholder="Message" onkeydown="handleComposerKeydown(event)" oninput="handleComposerInput()">
+      </div>
+      <button class="mic-btn" id="micBtn" title="Hold to record a voice message"
+        onmousedown="startRecording()" onmouseup="stopRecording(true)" onmouseleave="cancelRecordingIfActive()"
+        ontouchstart="startRecording(); event.preventDefault();" ontouchend="stopRecording(true)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+      </button>
+      <button class="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </div>
+  `;
+  updateChatHeaderStatus();
+  updateConnPill();
+  buildEmojiPicker();
+  renderMessages();
+  document.getElementById('msgInput').focus();
+}
+
+// ---- day grouping helper ----
+function dayLabel(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return d.toLocaleDateString([], { weekday: 'long' });
+  return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
+function renderMessages() {
+  const area = document.getElementById('messagesArea');
+  if (!area) return;
+  const msgs = messagesByContact[activeContact.id] || [];
+  const notice = `<div class="enc-notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Messages here are end-to-end encrypted</div>`;
+  if (msgs.length === 0) {
+    area.innerHTML = notice + `<div class="empty-note">No messages yet. Say hi 👋</div>`;
+    return;
+  }
+
+  let html = notice;
+  let lastDay = null;
+  for (const m of msgs) {
+    const label = dayLabel(m.sentAt);
+    if (label !== lastDay) {
+      html += `<div class="day-divider">${label}</div>`;
+      lastDay = label;
+    }
+    html += renderMessageRow(m);
+  }
+
+  const wasNearBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 120;
+  area.innerHTML = html;
+  if (wasNearBottom || true) area.scrollTop = area.scrollHeight;
+
+  msgs.filter(m => m.senderId !== me.id && !m.readAt && !m.deletedAt).forEach(m => {
+    wsSend({ type: 'message:read', messageId: m.id, senderId: m.senderId }, { noTimeout: true });
+  });
+}
+
+function renderMessageRow(m) {
+  const isMe = m.senderId === me.id;
+  const time = new Date(m.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const senderLabel = isMe ? 'You' : activeContact.displayName;
+
+  // Delivered vs Sent vs Read distinction - the backend already tracked
+  // delivered_at, this just surfaces it instead of skipping straight
+  // from "Sent" to "Read".
+  let statusSuffix = '';
+  let ticksHtml = '';
+  if (isMe && !m.deletedAt) {
+    if (m.failed) {
+      statusSuffix = '';
+    } else if (m.pending) {
+      statusSuffix = 'Sending…';
+    } else if (m.readAt) {
+      statusSuffix = 'Read'; ticksHtml = doubleTick(true);
+    } else if (m.deliveredAt) {
+      statusSuffix = 'Delivered'; ticksHtml = doubleTick(false);
+    } else {
+      statusSuffix = 'Sent'; ticksHtml = singleTick();
+    }
+  }
+  if (m.editedAt && !m.deletedAt) statusSuffix = (statusSuffix ? statusSuffix + ' · ' : '') + 'edited';
+
+  let bodyHtml;
+  if (m.deletedAt) {
+    bodyHtml = `<div class="bubble deleted">🚫 This message was deleted</div>`;
+  } else if (m.attachment?.kind === 'image' || (m.attachmentId && !m.attachment && m._localKind === 'image')) {
+    bodyHtml = renderImageBubble(m);
+  } else if (m.attachment?.kind === 'file' || (m.attachmentId && !m.attachment && m._localKind === 'file')) {
+    bodyHtml = renderFileBubble(m);
+  } else if (m.attachmentId) {
+    bodyHtml = renderVoiceBubble(m);
+  } else {
+    bodyHtml = escapeHtml(m.body);
+  }
+
+  const actions = (isMe && !m.deletedAt && !m.attachmentId) ? `
+    <div class="msg-actions">
+      <button onclick="startEditMessage('${m.id}')" title="Edit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5Z"/></svg>
+      </button>
+      <button onclick="deleteMessage('${m.id}')" title="Delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+      </button>
+    </div>` : '';
+
+  const retryHtml = m.failed ? `<button class="retry-btn" onclick="retryMessage('${m.id}')">Failed · Retry</button>` : '';
+  const timeRow = m.deletedAt ? '' : `<div class="bubble-time">${retryHtml}${!m.failed ? escapeHtml(time) : ''}${statusSuffix && !m.failed ? ' · ' + statusSuffix : ''}${ticksHtml ? `<span class="ticks">${ticksHtml}</span>` : ''}</div>`;
+
+  const isMediaBubble = m.attachment?.kind === 'image' || m.attachment?.kind === 'file';
+
+  return `
+    <div class="msg-row ${isMe ? 'me' : 'them'}" data-msg-id="${m.id}">
+      <div class="bubble-wrap">
+        ${actions}
+        ${isMediaBubble
+          ? `<div>${bodyHtml}${timeRow ? `<div class="bubble-time" style="justify-content:${isMe ? 'flex-end' : 'flex-start'};margin-top:2px;">${retryHtml}${!m.failed ? escapeHtml(time) : ''}${statusSuffix && !m.failed ? ' · ' + statusSuffix : ''}${ticksHtml}</div>` : ''}</div>`
+          : m.attachmentId
+          ? `<div class="bubble ${m.failed ? 'failed' : ''}">${bodyHtml}${timeRow}</div>`
+          : `<div class="bubble ${m.deletedAt ? 'deleted' : ''} ${m.failed ? 'failed' : ''}">${m.deletedAt ? '' : `<div class="bubble-sender">${escapeHtml(senderLabel)}</div>`}${bodyHtml}${timeRow}</div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function singleTick() {
+  return `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>`;
+}
+function doubleTick(read) {
+  return `<svg viewBox="0 0 24 24" width="17" height="13" fill="none" stroke="${read ? '#3ED598' : 'currentColor'}" stroke-width="2.5"><path d="M18 6 7 17l-5-5"/><path d="M22 6 11 17l-1.5-1.5"/></svg>`;
+}
+
+function renderVoiceBubble(m) {
+  const bars = Array.from({length: 22}, () => Math.floor(Math.random() * 16 + 6));
+  return `
+    <div class="voice-bubble">
+      <button class="voice-play-btn" onclick="playVoiceNote('${m.attachmentId}', this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="m8 5 11 7-11 7V5Z"/></svg>
+      </button>
+      <div class="voice-waveform">${bars.map(h => `<span style="height:${h}px"></span>`).join('')}</div>
+      <div class="voice-duration">🎤</div>
+    </div>
+  `;
+}
+
+function renderImageBubble(m) {
+  const url = serverUrl() + '/attachments/' + m.attachmentId;
+  const uploading = m.pending ? 'uploading' : '';
+  return `<div class="image-bubble ${uploading}" onclick="openLightbox('${url}')"><img src="${url}" alt="Photo" loading="lazy"></div>`;
+}
+
+function renderFileBubble(m) {
+  const url = serverUrl() + '/attachments/' + m.attachmentId;
+  const name = m.attachment?.originalFilename || m._localFilename || 'File';
+  const size = formatBytes(m.attachment?.sizeBytes ?? m._localSize);
+  return `
+    <a class="file-bubble" href="${url}" target="_blank" rel="noopener">
+      <div class="file-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      </div>
+      <div class="file-info">
+        <div class="file-name">${escapeHtml(name)}</div>
+        <div class="file-size">${escapeHtml(size)}</div>
+      </div>
+    </a>
+  `;
+}
+
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightboxOverlay').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightboxOverlay').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+
+let currentAudio = null;
+function playVoiceNote(attachmentId, btnEl) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const audio = new Audio(serverUrl() + '/attachments/' + attachmentId);
+  currentAudio = audio;
+  audio.play().catch(() => showToast('Could not play voice note — it may have expired', 'error'));
+  const icon = btnEl.querySelector('svg');
+  icon.innerHTML = '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>';
+  audio.onended = () => { icon.innerHTML = '<path d="m8 5 11 7-11 7V5Z"/>'; };
+}
+
+// ---- Edit / delete ----
+function startEditMessage(messageId) {
+  const msgs = messagesByContact[activeContact.id] || [];
+  const msg = msgs.find(m => m.id === messageId);
+  if (!msg) return;
+  const input = document.getElementById('msgInput');
+  input.value = msg.body;
+  input.focus();
+  input.dataset.editingId = messageId;
+  input.parentElement.style.background = 'rgba(59,76,224,0.1)';
+  showToast('Editing message — press Enter to save', '');
+}
+
+function deleteMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+  wsSend({ type: 'message:delete', messageId, recipientId: activeContact.id }, { noTimeout: true });
+}
+
+// ============================================================
+// SENDING TEXT MESSAGES (handles both new send + edit-save)
+// ============================================================
+function handleComposerKeydown(e) {
+  if (e.key === 'Enter') sendMessage();
+}
+
+function handleComposerInput() {
+  // Debounced outgoing typing signal - fire at most once every 2s
+  // while the person is actively typing, so contacts see a live
+  // "typing…" indicator (the backend already had this WS event,
+  // nothing was listening to it client-side before).
+  if (!activeContact) return;
+  const now = Date.now();
+  if (now - lastTypingSentAt > 2000) {
+    lastTypingSentAt = now;
+    wsSend({ type: 'typing', recipientId: activeContact.id }, { noTimeout: true });
+  }
+}
+
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const body = input.value.trim();
+  if (!body || !activeContact) return;
+
+  if (input.dataset.editingId) {
+    wsSend({ type: 'message:edit', messageId: input.dataset.editingId, newBody: body, recipientId: activeContact.id }, { noTimeout: true });
+    delete input.dataset.editingId;
+    input.parentElement.style.background = '';
+    input.value = '';
+    return;
+  }
+
+  const clientMsgId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const optimistic = { id: clientMsgId, senderId: me.id, recipientId: activeContact.id, body, sentAt: Date.now(), pending: true };
+  if (!messagesByContact[activeContact.id]) messagesByContact[activeContact.id] = [];
+  messagesByContact[activeContact.id].push(optimistic);
+  renderMessages();
+
+  wsSend({ type: 'message:send', recipientId: activeContact.id, body, clientMsgId });
+  input.value = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const input = document.getElementById('msgInput');
+    if (input && input.dataset.editingId) {
+      delete input.dataset.editingId;
+      input.parentElement.style.background = '';
+      input.value = '';
+    }
+    cancelRecordingIfActive();
+    closeEmojiPicker();
+  }
+});
+
+// ============================================================
+// EMOJI PICKER
+// ============================================================
+const EMOJI_SETS = {
+  '🙂': ['😀','😁','😂','🤣','😊','😇','🙂','🙃','😉','😍','🥰','😘','😗','😋','😜','🤪','😎','🤩','🥳','😏','😐','😑','😶','🙄','😴','😪','😷','🤒','😢','😭','😤','😡','🥺','😳','🤯','😱','🤗','🤔','🫡','😬','🙈'],
+  '❤️': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟'],
+  '👍': ['👍','👎','👏','🙌','👐','🤲','🤝','🙏','✌️','🤞','🤟','🤙','👌','👋','✋','🖐️','👊','✊','💪'],
+  '🎉': ['🎉','🎊','🎁','🎈','✨','🔥','⭐','🌟','💯','✅','❌','⚡','💥','🎯','🏆','🥇'],
+  '🐶': ['🐶','🐱','🦁','🐯','🐰','🐻','🐼','🐨','🐸','🐵','🦄','🐔','🐧','🦋','🌸','🌷','🌈','☀️','🌙','⭐'],
+  '🍕': ['🍕','🍔','🍟','🌭','🍿','🍩','🍰','🎂','🍫','🍭','☕','🍵','🧋','🍎','🍉','🍇','🍓','🥑'],
+};
+let currentEmojiTab = '🙂';
+
+function buildEmojiPicker() {
+  const el = document.getElementById('emojiPicker');
+  if (!el) return;
+  const tabs = Object.keys(EMOJI_SETS).map(t =>
+    `<button class="emoji-picker-tab ${t === currentEmojiTab ? 'active' : ''}" onclick="switchEmojiTab('${t}')">${t}</button>`
+  ).join('');
+  el.innerHTML = `
+    <div class="emoji-picker-tabs">${tabs}</div>
+    <div class="emoji-picker-grid" id="emojiGrid"></div>
+  `;
+  renderEmojiGrid();
+}
+function renderEmojiGrid() {
+  const grid = document.getElementById('emojiGrid');
+  if (!grid) return;
+  grid.innerHTML = EMOJI_SETS[currentEmojiTab].map(e => `<button onclick="insertEmoji('${e}')">${e}</button>`).join('');
+}
+function switchEmojiTab(tab) {
+  currentEmojiTab = tab;
+  buildEmojiPicker();
+}
+function insertEmoji(e) {
+  const input = document.getElementById('msgInput');
+  if (!input) return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + e + input.value.slice(end);
+  input.focus();
+  input.selectionStart = input.selectionEnd = start + e.length;
+}
+function toggleEmojiPicker() {
+  document.getElementById('emojiPicker')?.classList.toggle('open');
+}
+function closeEmojiPicker() {
+  document.getElementById('emojiPicker')?.classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+  const picker = document.getElementById('emojiPicker');
+  if (picker && picker.classList.contains('open') && !picker.contains(e.target) && !e.target.closest('.emoji-toggle-btn')) {
+    picker.classList.remove('open');
+  }
+});
+
+// ============================================================
+// IMAGE / FILE SENDING
+// ============================================================
+function toggleAttachMenu() {
+  // Simple: ask which kind via a tiny native prompt-free approach -
+  // just offer both inputs from one click using a short-lived choice.
+  const choice = confirm('Click OK to send a photo, or Cancel to send any other file.');
+  if (choice) document.getElementById('imageFileInput').click();
+  else document.getElementById('anyFileInput').click();
+}
+
+async function handleFilePicked(inputEl, kind) {
+  const file = inputEl.files[0];
+  inputEl.value = ''; // reset so picking the same file again still fires change
+  if (!file || !activeContact) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('File too large (max 10MB)', 'error');
+    return;
+  }
+
+  // Snapshot which contact this upload is actually for, right now -
+  // uploading (especially a big file, or over a slow ngrok tunnel) can
+  // take long enough that the person switches to a different chat
+  // before it finishes. Reading activeContact.id fresh at completion
+  // time would then target the WRONG contact (or, if activeContact had
+  // become null, throw inside messagesByContact[activeContact.id] and
+  // silently abort before the wsSend() call ever ran - which is
+  // exactly what made file/voice sends look randomly broken).
+  const targetContactId = activeContact.id;
+
+  const clientMsgId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const localUrl = kind === 'image' ? URL.createObjectURL(file) : null;
+  const optimistic = {
+    id: clientMsgId, senderId: me.id, recipientId: targetContactId,
+    body: '', sentAt: Date.now(), pending: true,
+    attachmentId: 'pending', // placeholder so bubble renders as media immediately
+    _localKind: kind, _localFilename: file.name, _localSize: file.size,
+  };
+  if (!messagesByContact[targetContactId]) messagesByContact[targetContactId] = [];
+  messagesByContact[targetContactId].push(optimistic);
+  if (activeContact && activeContact.id === targetContactId) renderMessages();
+  renderChatsList();
+  // Swap in the local blob URL for instant preview while uploading.
+  if (localUrl) {
+    const imgEl = document.querySelector(`[data-msg-id="${clientMsgId}"] .image-bubble img`);
+    if (imgEl) imgEl.src = localUrl;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const data = await api('/attachments/file', { method: 'POST', body: formData });
+
+    // Replace placeholder attachmentId with the real one now that
+    // upload finished, then send the actual chat message over WS -
+    // always against targetContactId, the contact this upload was
+    // actually started for, regardless of what's active now.
+    const msgs = messagesByContact[targetContactId];
+    const idx = msgs ? msgs.findIndex(m => m.id === clientMsgId) : -1;
+    if (idx !== -1) {
+      msgs[idx] = {
+        ...msgs[idx],
+        attachmentId: data.attachmentId,
+        attachment: { kind: data.kind, originalFilename: data.originalFilename, mimeType: data.mimeType, sizeBytes: data.sizeBytes },
+      };
+      if (activeContact && activeContact.id === targetContactId) renderMessages();
+      renderChatsList();
+    }
+
+    wsSend({ type: 'message:send', recipientId: targetContactId, body: '', attachmentId: data.attachmentId, clientMsgId });
+  } catch (e) {
+    markMessageFailed(clientMsgId, e.message);
+    showToast(e.message, 'error');
+  } finally {
+    if (localUrl) URL.revokeObjectURL(localUrl);
+  }
+}
+
+// ============================================================
+// VOICE NOTES — hold to record
+// ============================================================
+// Reuse a single getUserMedia() stream across recordings instead of
+// requesting a fresh one every time the mic button is pressed. This
+// is the fix for "asks for mic permission every time": some browsers
+// (especially over a plain http:// origin, not https://) re-surface
+// the mic-access indicator/prompt on every getUserMedia() call even
+// when permission was already granted, because stopping every track
+// after each recording (which the old code did) tears the whole
+// stream down and the next hold has to open the device fresh. Keeping
+// the stream alive between recordings and only creating a new
+// MediaRecorder per hold avoids that entirely.
+let micStream = null;
+
+async function getMicStream() {
+  if (micStream && micStream.active) return micStream;
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  return micStream;
+}
+
+async function startRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  try {
+    const stream = await getMicStream();
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.start();
+    recordingStartTime = Date.now();
+
+    document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('recordingBanner').classList.add('active');
+    recordingTimerInterval = setInterval(() => {
+      const secs = Math.floor((Date.now() - recordingStartTime) / 1000);
+      const m = Math.floor(secs / 60), s = secs % 60;
+      const timeEl = document.getElementById('recordingTime');
+      if (timeEl) timeEl.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    }, 200);
+  } catch (e) {
+    showToast('Microphone access denied or unavailable', 'error');
+  }
+}
+
+function cancelRecordingIfActive() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.onstop = () => { recordedChunks = []; }; // discard
+    mediaRecorder.stop();
+    // Deliberately NOT stopping micStream's tracks here anymore - that
+    // was what forced a full re-request (and re-prompt) on every single
+    // recording. The stream now stays open for the whole chat session
+    // and is only released when you leave the page (see beforeunload
+    // below) or switch away from this chat.
+    resetRecordingUI();
+  }
+}
+
+function stopRecording(shouldSend) {
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+  const durationMs = Date.now() - recordingStartTime;
+
+  if (durationMs < 400) {
+    // Too short - probably an accidental click, not a real hold.
+    cancelRecordingIfActive();
+    return;
+  }
+
+  mediaRecorder.onstop = async () => {
+    resetRecordingUI();
+    if (!shouldSend) return;
+
+    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+    if (blob.size > 10 * 1024 * 1024) {
+      showToast('Voice note too large (max 10MB)', 'error');
+      return;
+    }
+    await uploadAndSendVoiceNote(blob, durationMs);
+  };
+  mediaRecorder.stop();
+}
+
+// Release the mic only when actually leaving the page, not between
+// individual recordings - browsers show a persistent "mic in use"
+// indicator while the stream is open, which is expected and normal
+// (same as any real voice-messaging app) and is a fair trade for not
+// re-prompting on every single voice note.
+window.addEventListener('beforeunload', () => {
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+});
+
+function resetRecordingUI() {
+  document.getElementById('micBtn')?.classList.remove('recording');
+  document.getElementById('recordingBanner')?.classList.remove('active');
+  clearInterval(recordingTimerInterval);
+}
+
+async function uploadAndSendVoiceNote(blob, durationMs) {
+  if (!activeContact) return;
+  // Same targetContactId snapshot fix as handleFilePicked above - a
+  // recording that's still uploading when the person switches chats
+  // would otherwise send to (or crash trying to send to) the wrong
+  // contact. This, combined with the WS duplicate-connection bug fixed
+  // in connectWs(), was very likely the real cause of "sometimes takes
+  // forever to send, then insta-sends after refresh": the message
+  // never actually reached a live, stable socket in the first place.
+  const targetContactId = activeContact.id;
+
+  showToast('Sending voice message…');
+  const clientMsgId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const optimistic = {
+    id: clientMsgId, senderId: me.id, recipientId: targetContactId,
+    body: '', attachmentId: 'pending', sentAt: Date.now(), pending: true,
+  };
+  if (!messagesByContact[targetContactId]) messagesByContact[targetContactId] = [];
+  messagesByContact[targetContactId].push(optimistic);
+  if (activeContact && activeContact.id === targetContactId) renderMessages();
+  renderChatsList();
+
+  try {
+    const formData = new FormData();
+    formData.append('audio', blob, 'voice.webm');
+    formData.append('durationMs', String(durationMs));
+    const data = await api('/attachments/voice', { method: 'POST', body: formData });
+
+    // Fill in the real attachmentId now that the upload has actually
+    // finished, looked up by targetContactId (not activeContact, which
+    // may have changed) so this always lands on the right message even
+    // if the person switched chats mid-upload.
+    const msgs = messagesByContact[targetContactId];
+    const idx = msgs ? msgs.findIndex(m => m.id === clientMsgId) : -1;
+    if (idx !== -1) {
+      msgs[idx] = { ...msgs[idx], attachmentId: data.attachmentId };
+      if (activeContact && activeContact.id === targetContactId) renderMessages();
+      renderChatsList();
+    }
+
+    wsSend({ type: 'message:send', recipientId: targetContactId, body: '', attachmentId: data.attachmentId, clientMsgId });
+    hideToast();
+  } catch (e) {
+    markMessageFailed(clientMsgId, e.message);
+    showToast(e.message, 'error');
+  }
+}
+
+// ============================================================
+// PROFILE MODAL
+// ============================================================
+// Cache of the last-fetched profile per userId so re-opening the same
+// profile in one session doesn't always refetch, though we still
+// refetch on every open since last-seen/bio can change between views.
+let profileModalUserId = null;
+
+function formatLastSeen(ts) {
+  if (!ts) return 'a while ago';
+  const diffMs = Date.now() - ts;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(ts).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatJoined(ts) {
+  if (!ts) return 'Unknown';
+  return new Date(ts).toLocaleDateString([], { month: 'long', year: 'numeric' });
+}
+
+async function openProfile(userId) {
+  profileModalUserId = userId;
+  const overlay = document.getElementById('profileModal');
+  const content = document.getElementById('profileModalContent');
+  content.innerHTML = `<div style="padding:50px 20px;text-align:center;color:var(--text-faint);font-size:13.5px;">Loading profile…</div>`;
+  overlay.classList.add('open');
+
+  try {
+    const data = await api('/user/profile/' + userId);
+    renderProfileModal(data.user);
+  } catch (e) {
+    content.innerHTML = `<div style="padding:40px 24px;text-align:center;">
+      <div class="auth-error" style="justify-content:center;">${escapeHtml(e.message)}</div>
+      <button class="btn-text" onclick="closeProfileModal()">Close</button>
+    </div>`;
+  }
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').classList.remove('open');
+  profileModalUserId = null;
+}
+
+function renderProfileModal(user) {
+  const content = document.getElementById('profileModalContent');
+  const isMe = user.id === me.id;
+  const statusLine = user.statusMode === 'invisible' && !isMe
+    ? 'Offline' // contacts never see someone's invisible mode directly, just appear-offline
+    : (user.online ? 'Online now' : `Last seen ${formatLastSeen(user.lastSeenAt)}`);
+
+  content.innerHTML = `
+    <div class="profile-cover">
+      <button class="profile-modal-close" onclick="closeProfileModal()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="profile-avatar-lg" style="background:${colorFor(user.id)}">
+        ${avatarInnerHtml(user)}
+        ${isMe ? `<div class="profile-avatar-edit" onclick="document.getElementById('avatarFileInput').click()" title="Change profile picture">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        </div>` : ''}
+      </div>
+      <div class="profile-name">${escapeHtml(user.displayName)}</div>
+      <div class="profile-username">@${escapeHtml(user.username || user.phone)}</div>
+    </div>
+    <div class="profile-body">
+      <div class="profile-row">
+        <div class="profile-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="profile-row-content">
+          <div class="profile-row-label">Status</div>
+          <div class="profile-row-value"><span class="profile-status-dot ${user.online ? 'online' : ''}"></span>${escapeHtml(statusLine)}</div>
+        </div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <div class="profile-row-content">
+          <div class="profile-row-label">About</div>
+          <div class="profile-row-value editable-bio" id="profileBioDisplay" ${isMe ? `onclick="startEditBio()"` : ''}>${
+            user.bio ? escapeHtml(user.bio) : (isMe ? '<span style="color:var(--text-faint);">Add a bio…</span>' : '<span style="color:var(--text-faint);">No bio yet</span>')
+          }</div>
+        </div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <div class="profile-row-content">
+          <div class="profile-row-label">Joined Peyk</div>
+          <div class="profile-row-value">${escapeHtml(formatJoined(user.createdAt))}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function startEditBio() {
+  const displayEl = document.getElementById('profileBioDisplay');
+  if (!displayEl || displayEl.dataset.editing) return;
+  displayEl.dataset.editing = '1';
+  const currentBio = me.bio || '';
+  displayEl.innerHTML = `
+    <textarea class="profile-bio-input" id="profileBioInput" rows="3" maxlength="200" placeholder="Tell your contacts a bit about yourself…">${escapeHtml(currentBio)}</textarea>
+    <div class="profile-save-row">
+      <button class="cancel-btn" onclick="cancelEditBio()">Cancel</button>
+      <button class="save-btn" onclick="saveBio()">Save</button>
+    </div>
+  `;
+  document.getElementById('profileBioInput').focus();
+}
+
+function cancelEditBio() {
+  if (!profileModalUserId) return;
+  api('/user/profile/' + profileModalUserId).then(data => renderProfileModal(data.user)).catch(() => closeProfileModal());
+}
+
+async function saveBio() {
+  const input = document.getElementById('profileBioInput');
+  const bio = input ? input.value.trim() : '';
+  try {
+    const data = await api('/user/profile', { method: 'POST', body: JSON.stringify({ bio }) });
+    me.bio = data.user.bio;
+    localStorage.setItem('peyk_me', JSON.stringify(me));
+    renderProfileModal(data.user);
+    showToast('Bio updated', 'connected');
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function handleAvatarPicked(inputEl) {
+  const file = inputEl.files[0];
+  inputEl.value = '';
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToast('Please choose an image file', 'error');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('Image too large (max 10MB)', 'error');
+    return;
+  }
+
+  showToast('Uploading profile picture…');
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const uploadData = await api('/attachments/file', { method: 'POST', body: formData });
+    if (uploadData.kind !== 'image') throw new Error('That file was not recognized as an image');
+
+    const avatarData = await api('/user/avatar', { method: 'POST', body: JSON.stringify({ attachmentId: uploadData.attachmentId }) });
+    me.avatarAttachmentId = avatarData.avatarAttachmentId;
+    localStorage.setItem('peyk_me', JSON.stringify(me));
+
+    // Refresh every avatar on screen so the new picture shows up
+    // immediately without needing a reload.
+    const meAvatar = document.getElementById('meStripAvatar');
+    if (meAvatar) meAvatar.innerHTML = avatarInnerHtml(me);
+    if (profileModalUserId === me.id) {
+      const data = await api('/user/profile/' + me.id);
+      renderProfileModal(data.user);
+    }
+    renderChatsList();
+    if (activeContact) renderChatPanel();
+
+    hideToast();
+    showToast('Profile picture updated', 'connected');
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+document.getElementById('profileModal').addEventListener('click', (e) => {
+  if (e.target.id === 'profileModal') closeProfileModal();
+});
+
+// ============================================================
+// SETTINGS + THEME
+// ============================================================
+function toggleSettingsMenu() { document.getElementById('settingsMenu').classList.toggle('open'); }
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('settingsMenu');
+  if (menu && !menu.contains(e.target) && !e.target.closest('.icon-btn')) menu.classList.remove('open');
+});
+
+function toggleDarkMode() {
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', next);
+  document.getElementById('darkToggle').classList.toggle('on', next === 'dark');
+  localStorage.setItem('peyk_theme', next);
+}
+function restoreTheme() {
+  const saved = localStorage.getItem('peyk_theme');
+  if (saved === 'dark') {
+    document.body.setAttribute('data-theme', 'dark');
+    document.getElementById('darkToggle').classList.add('on');
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+restoreTheme();
+tryRestoreSession();
+</script>
+
+</body>
+</html>
